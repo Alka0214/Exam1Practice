@@ -1,0 +1,100 @@
+---
+title: "Practice exam 2"
+author: "alina diduk"
+date: "10/1/2022"
+output: html_document
+---
+  
+  
+```{r}
+library(fpp2)
+library(ggplot2)
+#Plot and Inference
+data("arrivals")
+head(arrivals)
+ts_arrivals <- arrivals[,4]
+plot(ts_arrivals)
+
+
+#The plot is showing upward trend, the travel form US to Australia is increasing over time. There might be a seasonality due to common peaks and declines in similar times. There are a few sudden drops that could be influenced by outside influence. Overall in the beginning it can be seen that that there was an increase in travel over time. 
+
+
+#Central tendency
+acf(ts_arrivals)
+#Most of the ts spikes are outbound of the significance line meaning that correlation between the lags is statistically significant.
+summary(ts_arrivals)
+
+boxplot(ts_arrivals)
+
+#The general observation can be summarized using he box plot and the summary function. We can identify exact min 1st Q., Median, Mean, 3rd Q., and Max using the summary and then use those values to describe the box plot. Given: we can see that the max number of arrivals form US to Australia is 136.09, and the min is 23.72. The mean is 84.85(average set of arrivals). Median or the middle number form eh set of values is 85.88. 
+
+
+#Decomposition
+ets_forecast <- ets(elecequip)
+plot(ets_forecast)
+
+stl_decomp <- stl(ts_arrivals,s.window ="periodic")
+plot(stl_decomp)
+decompose(ts_arrivals)
+
+
+#according to the season part of the ETS model there is a repeated pattern that indicated the seasonality.
+#After running the decompose function the type is additive, meaning that the seasonal pattern remained constant regardless of the trend level.
+
+#The Qtr1 is the highest 6.784749,then Qtr4 is 5.901790, then Qtr2 -7.9692992, and Qtr3 -4.717247. The months would be from January to March and then pick up again October and December. It could be season, since people would travel to warm countries for the cold seaosns in US. 
+
+seasadj(stl_decomp)
+seasAd <- seasadj(stl_decomp)
+plot(seasAd)
+plot(ts_arrivals, col = "red")
+lines(seasAd, col="blue")
+
+
+#Naive Method
+naive_forecast <- naive(ts_arrivals,2)
+plot(naive_forecast)
+
+residuals_naive <- residuals(naive_forecast)
+plot(residuals_naive)
+#It plots the difference between the actual and the predicting output. There are large spikes which might mean that the model has large errors. 
+hist(residuals_naive)
+#the residuals are clustered around 0 whihc could suggest no bias(strong).
+
+fitted_values <- fitted(naive_forecast)
+
+# Get residuals
+residuals_naive <- residuals(naive_forecast)
+
+df <- data.frame(Fitted = fitted_values, Residuals = residuals_naive)
+
+ggplot(df, aes(x = Fitted, y = Residuals)) +
+  geom_point(color = "blue") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  ggtitle("Fitted Values vs. Residuals (Naïve Model)") +
+  xlab("Fitted Values") +
+  ylab("Residuals") +
+  theme_minimal()
+#there is o pattern, good sign. There is a large variability for higher numbers.
+
+ggAcf(residuals_naive)
+#The significance line contains a few spikes, and the spikes do have a pattern or a reflection that can be seen. The spikes in lags 4, 8,12... can be interpreted as seasonality. The naive model might not be a good choice since the naive model doesn't account for seasonality. 
+
+accuracy(naive_forecast)
+
+
+#Forecast
+forecast_naive_1 <- forecast(naive_forecast, 4)
+plot(forecast_naive_1)
+attributes(forecast_naive_1)
+
+summary(forecast_naive_1)
+accuracy(forecast_naive_1)
+
+#According to the accuracy the model is overestimating it is above 0.The average forecasting error is 11ish %. MASE is higher than one which indicates that the model of naive forecast is worse than the benchmark model. The last assumed value is 106.5 for the forecasting model of naive. 
+
+
+
+
+
+```
+  
